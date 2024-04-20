@@ -25,9 +25,27 @@
 
 
 const fs = require('fs');
-const html = fs.readFileSync('./Template/index.html','utf-8')
-const products = JSON.parse(fs.readFileSync('./Data/products.json','utf-8'))
 const http = require('http');
+
+let products = JSON.parse(fs.readFileSync('./Data/products.json','utf-8'))
+
+const html = fs.readFileSync('./Template/index.html','utf-8')
+let productsList = fs.readFileSync('./Template/productsList.html','utf-8')
+
+let productHtmlArray = products.map((prod) => {
+    let output = productsList.replace('{{%IMAGE%}}',prod.productImage);
+    output = output.replace('{{%NAME%}}',prod.name);
+    output = output.replace('{{%MODELNAME%}}',prod.modelName);
+    output = output.replace('{{%MODELNO%}',prod.modelNumber);
+    output = output.replace('{{%SIZE%}}',prod.size);
+    output = output.replace('{{%CAMERA%}}',prod.camera);
+    output = output.replace('{{%PRICE%}}',prod.price);
+    output = output.replace('{{%COLOR%}}',prod.color);
+
+    return output;
+})
+
+
 const server = http.createServer((request, response) => {
     let path = request.url;
 
@@ -38,9 +56,10 @@ const server = http.createServer((request, response) => {
         response.writeHead(200);
         response.end(html.replace('{{%CONTENT%}}','in about page'));
     }else if(path.toLocaleLowerCase() === '/products'){
+        let productResponseHtml = html.replace('{{%CONTENT%}}',productHtmlArray.join(','))
         response.writeHead(200);
-        response.end("u r in products page");
-        console.log(products)
+        response.end(productResponseHtml);
+        
     }else{
         response.writeHead(404);
         response.end(html.replace('{{%CONTENT%}}','404 error'));
