@@ -26,7 +26,7 @@
 
 const fs = require('fs');
 const html = fs.readFileSync('./Template/index.html','utf-8')
-
+const products = JSON.parse(fs.readFileSync('./Data/products.json','utf-8'))
 const http = require('http');
 const server = http.createServer((request, response) => {
     let path = request.url;
@@ -37,6 +37,10 @@ const server = http.createServer((request, response) => {
     }else if(path.toLocaleLowerCase() === '/about'){
         response.writeHead(200);
         response.end(html.replace('{{%CONTENT%}}','in about page'));
+    }else if(path.toLocaleLowerCase() === '/products'){
+        response.writeHead(200);
+        response.end("u r in products page");
+        console.log(products)
     }else{
         response.writeHead(404);
         response.end(html.replace('{{%CONTENT%}}','404 error'));
