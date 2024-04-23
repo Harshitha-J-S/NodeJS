@@ -23,9 +23,10 @@
 // // the readfile method runs in background hence the below cde can be executes
  //console.log('reading file...');
 
-
+const readline = require('readline');
 const fs = require('fs');
 const http = require('http');
+const url = require('url');
 
 let products = JSON.parse(fs.readFileSync('./Data/products.json','utf-8'))
 
@@ -41,13 +42,15 @@ let productHtmlArray = products.map((prod) => {
     output = output.replace('{{%CAMERA%}}',prod.camera);
     output = output.replace('{{%PRICE%}}',prod.price);
     output = output.replace('{{%COLOR%}}',prod.color);
-
+    output = output.replace('{{%ID%}}',prod.id);
     return output;
 })
 
 
 const server = http.createServer((request, response) => {
-    let path = request.url;
+    // let path = request.url;
+    let {query,pathname : path} = url.parse(request.url,true) // to extract the properties after we console the reuest url
+    
 
     if(path=== '/'|| path.toLocaleLowerCase() === '/home'){
         response.writeHead(200);
@@ -56,9 +59,13 @@ const server = http.createServer((request, response) => {
         response.writeHead(200);
         response.end(html.replace('{{%CONTENT%}}','in about page'));
     }else if(path.toLocaleLowerCase() === '/products'){
+        if(!query.id){
         let productResponseHtml = html.replace('{{%CONTENT%}}',productHtmlArray.join(','))
         response.writeHead(200);
         response.end(productResponseHtml);
+        } else {
+            response.end('this page is with id =' + query.id)
+        }
         
     }else{
         response.writeHead(404);
