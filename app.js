@@ -21,58 +21,64 @@
 //     })
 // });
 // // the readfile method runs in background hence the below cde can be executes
- //console.log('reading file...');
+//console.log('reading file...');
 
 const readline = require('readline');
 const fs = require('fs');
 const http = require('http');
 const url = require('url');
 
-let products = JSON.parse(fs.readFileSync('./Data/products.json','utf-8'))
 
-const html = fs.readFileSync('./Template/index.html','utf-8')
-let productsList = fs.readFileSync('./Template/productsList.html','utf-8')
+const html = fs.readFileSync('./Template/index.html', 'utf-8')
+let products = JSON.parse(fs.readFileSync('./Data/products.json', 'utf-8'))
+let productsList = fs.readFileSync('./Template/productsList.html', 'utf-8')
+let productDetails = fs.readFileSync('./Template/productDetails.html', 'utf-8')
 
-let productHtmlArray = products.map((prod) => {
-    let output = productsList.replace('{{%IMAGE%}}',prod.productImage);
-    output = output.replace('{{%NAME%}}',prod.name);
-    output = output.replace('{{%MODELNAME%}}',prod.modelName);
-    output = output.replace('{{%MODELNO%}',prod.modelNumber);
-    output = output.replace('{{%SIZE%}}',prod.size);
-    output = output.replace('{{%CAMERA%}}',prod.camera);
-    output = output.replace('{{%PRICE%}}',prod.price);
-    output = output.replace('{{%COLOR%}}',prod.color);
-    output = output.replace('{{%ID%}}',prod.id);
+function replacehtml(template, product) {
+    let output = template.replace('{{%IMAGE%}}', product.productImage);
+    output = output.replace('{{%NAME%}}', product.name);
+    output = output.replace('{{%MODELNAME%}}', product.modelNumber);
+    output = output.replace('{{%SIZE%}}', product.size);
+    output = output.replace('{{%CAMERA%}}', product.camera);
+    output = output.replace('{{%PRICE%}}', product.price);
+    output = output.replace('{{%COLOR%}}', product.color);
+    output = output.replace('{{%ID%}}', product.id);
+    output = output.replace('{{%ROM%}}', product.ROM);
+    output = output.replace('{{%DESC%}}', product.Description);
     return output;
-})
-
+}
 
 const server = http.createServer((request, response) => {
     // let path = request.url;
-    let {query,pathname : path} = url.parse(request.url,true) // to extract the properties after we console the reuest url
-    
+    let { query, pathname: path } = url.parse(request.url, true) // to extract the properties after we console the reuest url
 
-    if(path=== '/'|| path.toLocaleLowerCase() === '/home'){
+
+    if (path === '/' || path.toLocaleLowerCase() === '/home') {
         response.writeHead(200);
-        response.end(html.replace('{{%CONTENT%}}','in home page'));
-    }else if(path.toLocaleLowerCase() === '/about'){
+        response.end(html.replace('{{%CONTENT%}}', 'in home page'));
+    } else if (path.toLocaleLowerCase() === '/about') {
         response.writeHead(200);
-        response.end(html.replace('{{%CONTENT%}}','in about page'));
-    }else if(path.toLocaleLowerCase() === '/products'){
-        if(!query.id){
-        let productResponseHtml = html.replace('{{%CONTENT%}}',productHtmlArray.join(','))
-        response.writeHead(200);
-        response.end(productResponseHtml);
+        response.end(html.replace('{{%CONTENT%}}', 'in about page'));
+    } else if (path.toLocaleLowerCase() === '/products') {
+        if (!query.id) {
+            let productHtmlArray = products.map((prod) => {
+                return replacehtml(productsList, prod)
+            })
+            let productResponseHtml = html.replace('{{%CONTENT%}}', productHtmlArray.join(','))
+            response.writeHead(200);
+            response.end(productResponseHtml);
         } else {
-            response.end('this page is with id =' + query.id)
+            let prod = products[query.id];
+            let productsDetailResponseHtml = replacehtml(productDetails, prod);
+            response.end(html.replace('{{%CONTENT%}}', productsDetailResponseHtml));
         }
-        
-    }else{
+    }
+    else {
         response.writeHead(404);
-        response.end(html.replace('{{%CONTENT%}}','404 error'));
+        response.end(html.replace('{{%CONTENT%}}', '404 error'));
     }
 });
 
-server.listen(8000,'127.0.0.1',() => {
+server.listen(8000, '127.0.0.1', () => {
     console.log('server has started');
 })
