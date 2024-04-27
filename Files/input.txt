@@ -1,1 +1,2 @@
 This is NodeJS
+npm i -g nodemon --save-dev    to install globally
